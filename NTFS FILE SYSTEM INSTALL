@@ -1,0 +1,23 @@
+Install NTFS-3G (recommended)
+
+# First, enable EPEL repository
+dnf install epel-release -y
+
+# Then install ntfs-3g
+dnf install ntfs-3g -y
+
+
+If EPEL isn't available or you're offline, try:
+dnf install ntfsprogs -y
+
+
+Mount manually after installing:
+mount -t ntfs-3g /dev/sdb1 /run/media/root/RHEL-10-1-B
+
+
+Why this happens: RHEL 10 ships without NTFS kernel support by default due to licensing reasons. The ntfs-3g package provides NTFS support in userspace as a workaround.
+If you don't have internet access, you'd need to:
+
+Download the ntfs-3g RPM package from another machine
+Transfer it via another USB drive (formatted as ext4 or FAT32)
+Install with rpm -ivh ntfs-3g-*.rpm
