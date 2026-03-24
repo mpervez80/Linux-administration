@@ -1,0 +1,92 @@
+IP Tables Note
+=============================================
+
+sudo firewall-cmd --permanent --add-port=7788/tcp
+sudo firewall-cmd --permanent --add-port=8090/tcp
+sudo firewall-cmd --permanent --add-port=9090/tcp
+sudo firewall-cmd --permanent --add-port=1521/tcp
+sudo firewall-cmd --reload
+
+
+Add Rule: sudo firewall-cmd --permanent --add-port=8090/tcp
+Reload: sudo firewall-cmd --reload
+Verify: sudo firewall-cmd --list-ports
+
+
+
+3. iptables (Generic/Advanced) 
+For systems using iptables directly, you insert a rule into the INPUT chain. 
+sudo iptables -I INPUT -p tcp --dport 8090 -j ACCEPT
+Save Rules:
+RHEL/CentOS: sudo service iptables save
+
+
+=============================================
+
+
+Step 1: Flush existing custom INPUT rules
+=============================================
+sudo iptables -F INPUT
+
+
+Step 2: Add your allowed ports
+=============================================
+
+# Allow established/related connections (important - don't skip this)
+sudo iptables -A INPUT -m state --state ESTABLISHED,RELATED -j ACCEPT
+
+# Allow loopback
+sudo iptables -A INPUT -i lo -j ACCEPT
+
+# Allow your ports
+sudo iptables -A INPUT -p tcp --dport 22   -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 7788 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 8090 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 9090 -j ACCEPT
+sudo iptables -A INPUT -p tcp --dport 1521 -j ACCEPT
+
+or 
+==
+sudo firewall-cmd --permanent --add-port=22/tcp
+sudo firewall-cmd --permanent --add-port=7788/tcp
+sudo firewall-cmd --permanent --add-port=8090/tcp
+sudo firewall-cmd --permanent --add-port=9090/tcp
+sudo firewall-cmd --permanent --add-port=1521/tcp
+sudo firewall-cmd --permanent --add-port=9502/tcp
+sudo firewall-cmd --permanent --add-port=9500/tcp
+sudo firewall-cmd --reload
+
+Check online port Status Link.
+
+https://www.yougetsignal.com/tools/open-ports/
+
+# Reject everything else
+sudo iptables -A INPUT -j REJECT --reject-with icmp-port-unreachable
+
+Step 3: Verify
+=============================================
+
+sudo iptables -L INPUT -n -v --line-numbers
+
+
+Expected output:
+
+Chain INPUT (policy ACCEPT)
+num  pkts bytes target  prot  in    out  source       destination
+1       0     0 ACCEPT  all   *     *    0.0.0.0/0    0.0.0.0/0    state RELATED,ESTABLISHED
+2       0     0 ACCEPT  all   lo    *    0.0.0.0/0    0.0.0.0/0
+3       0     0 ACCEPT  tcp   *     *    0.0.0.0/0    0.0.0.0/0    tcp dpt:22
+4       0     0 ACCEPT  tcp   *     *    0.0.0.0/0    0.0.0.0/0    tcp dpt:7788
+5       0     0 ACCEPT  tcp   *     *    0.0.0.0/0    0.0.0.0/0    tcp dpt:8090
+6       0     0 ACCEPT  tcp   *     *    0.0.0.0/0    0.0.0.0/0    tcp dpt:9090
+7       0     0 REJECT  all   *     *    0.0.0.0/0    0.0.0.0/0    reject-with icmp-port-unreachable
+
+
+
+Step 4: Save rules permanently
+=============================================
+
+sudo iptables-save > /etc/sysconfig/iptables
+
+
+sudo firewall-cmd --reload
